@@ -75,9 +75,34 @@ create_secret "coinbase-spot-api-key" "Coinbase Prime API Key for spot trading"
 create_secret "coinbase-spot-api-secret" "Coinbase Prime API Secret for spot trading"
 create_secret "coinbase-spot-passphrase" "Coinbase Prime API Passphrase for spot trading"
 
-create_secret "coinbase-derivatives-api-key" "Coinbase Advanced Trade API Key for derivatives"
-create_secret "coinbase-derivatives-api-secret" "Coinbase Advanced Trade API Secret for derivatives"
-create_secret "coinbase-derivatives-passphrase" "Coinbase Advanced Trade API Passphrase for derivatives"
+# Ask which auth method for derivatives
+echo -e "\n${YELLOW}Which authentication method will you use for Advanced Trade API (derivatives)?${NC}"
+echo "1) Legacy (API Key/Secret/Passphrase) - deprecated but still supported"
+echo "2) JWT (API Key Name/Private Key) - recommended for new integrations"
+read -p "Select (1 or 2): " auth_choice
+
+if [[ "$auth_choice" == "2" ]]; then
+    echo -e "\n${GREEN}Setting up JWT authentication for derivatives${NC}"
+    create_secret "coinbase-derivatives-jwt-key-name" "Coinbase Advanced Trade API Key Name (format: organizations/{org_id}/apiKeys/{key_id})"
+    
+    echo -e "\n${YELLOW}For the private key, you'll need to paste the entire PEM content${NC}"
+    echo "It should start with '-----BEGIN EC PRIVATE KEY-----' and end with '-----END EC PRIVATE KEY-----'"
+    echo "Press Enter then paste the key, then press Ctrl+D when done:"
+    
+    private_key=$(cat)
+    echo -n "$private_key" | gcloud secrets create "coinbase-derivatives-private-key" \
+        --project="$PROJECT_ID" \
+        --replication-policy="automatic" \
+        --labels="app=basis-trader" \
+        --data-file=-
+    
+    echo -e "${GREEN}✓ JWT authentication secrets configured${NC}"
+else
+    echo -e "\n${GREEN}Setting up legacy authentication for derivatives${NC}"
+    create_secret "coinbase-derivatives-api-key" "Coinbase Advanced Trade API Key for derivatives"
+    create_secret "coinbase-derivatives-api-secret" "Coinbase Advanced Trade API Secret for derivatives"
+    create_secret "coinbase-derivatives-passphrase" "Coinbase Advanced Trade API Passphrase for derivatives"
+fi
 
 # Grant permissions to the default service account (or user)
 echo -e "\n${GREEN}Setting up permissions...${NC}"

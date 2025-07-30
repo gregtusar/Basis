@@ -38,9 +38,16 @@ type SpotConfig struct {
 }
 
 type DerivativesConfig struct {
+	// Legacy authentication (deprecated but still supported)
 	APIKey     string `mapstructure:"api_key"`
 	APISecret  string `mapstructure:"api_secret"`
 	Passphrase string `mapstructure:"passphrase"`
+	
+	// JWT authentication (new method)
+	AuthType      string `mapstructure:"auth_type"` // "legacy" or "jwt"
+	APIKeyName    string `mapstructure:"api_key_name"` // For JWT: organizations/{org_id}/apiKeys/{key_id}
+	PrivateKeyPEM string `mapstructure:"private_key_pem"` // For JWT: EC private key in PEM format
+	
 	Sandbox    bool   `mapstructure:"sandbox"`
 }
 
@@ -132,6 +139,7 @@ func setDefaults(v *viper.Viper) {
 	// Coinbase defaults
 	v.SetDefault("coinbase.spot.sandbox", false)
 	v.SetDefault("coinbase.derivatives.sandbox", false)
+	v.SetDefault("coinbase.derivatives.auth_type", "legacy") // Default to legacy for backward compatibility
 	v.SetDefault("coinbase.websocket.url", "wss://ws-feed.exchange.coinbase.com")
 	v.SetDefault("coinbase.websocket.reconnect_delay", 5)
 	v.SetDefault("coinbase.websocket.max_reconnects", 10)
@@ -164,6 +172,8 @@ func setDefaults(v *viper.Viper) {
 	v.SetDefault("gcp.secret_names.derivatives_api_key", secretNames.DerivativesAPIKey)
 	v.SetDefault("gcp.secret_names.derivatives_api_secret", secretNames.DerivativesAPISecret)
 	v.SetDefault("gcp.secret_names.derivatives_passphrase", secretNames.DerivativesPassphrase)
+	v.SetDefault("gcp.secret_names.derivatives_api_key_name", secretNames.DerivativesAPIKeyName)
+	v.SetDefault("gcp.secret_names.derivatives_private_key", secretNames.DerivativesPrivateKey)
 }
 
 func overrideFromEnv(config *Config) {
@@ -186,6 +196,17 @@ func overrideFromEnv(config *Config) {
 	}
 	if passphrase := os.Getenv("COINBASE_DERIVATIVES_PASSPHRASE"); passphrase != "" {
 		config.Coinbase.Derivatives.Passphrase = passphrase
+	}
+
+	// JWT auth for derivatives
+	if authType := os.Getenv("COINBASE_DERIVATIVES_AUTH_TYPE"); authType != "" {
+		config.Coinbase.Derivatives.AuthType = authType
+	}
+	if apiKeyName := os.Getenv("COINBASE_DERIVATIVES_API_KEY_NAME"); apiKeyName != "" {
+		config.Coinbase.Derivatives.APIKeyName = apiKeyName
+	}
+	if privateKey := os.Getenv("COINBASE_DERIVATIVES_PRIVATE_KEY"); privateKey != "" {
+		config.Coinbase.Derivatives.PrivateKeyPEM = privateKey
 	}
 
 	// GCP configuration from environment
@@ -229,6 +250,16 @@ func loadSecretsFromGCP(ctx context.Context, config *Config, logger *logrus.Logg
 	if config.Coinbase.Derivatives.Passphrase == "" {
 		config.Coinbase.Derivatives.Passphrase = secretManager.GetSecretWithDefault(ctx, 
 			config.GCP.SecretNames.DerivativesPassphrase, "")
+	}
+
+	// JWT auth secrets for derivatives
+	if config.Coinbase.Derivatives.APIKeyName == "" {
+		config.Coinbase.Derivatives.APIKeyName = secretManager.GetSecretWithDefault(ctx, 
+			config.GCP.SecretNames.DerivativesAPIKeyName, "")
+	}
+	if config.Coinbase.Derivatives.PrivateKeyPEM == "" {
+		config.Coinbase.Derivatives.PrivateKeyPEM = secretManager.GetSecretWithDefault(ctx, 
+			config.GCP.SecretNames.DerivativesPrivateKey, "")
 	}
 
 	logger.Info("Successfully loaded secrets from GCP Secret Manager")

@@ -67,12 +67,28 @@ func runTrader(cmd *cobra.Command, args []string) {
 		cfg.Coinbase.Spot.Sandbox,
 	)
 	
-	derivativesClient := coinbase.NewAdvancedTradeClient(
-		cfg.Coinbase.Derivatives.APIKey,
-		cfg.Coinbase.Derivatives.APISecret,
-		cfg.Coinbase.Derivatives.Passphrase,
-		cfg.Coinbase.Derivatives.Sandbox,
-	)
+	// Create derivatives client based on auth type
+	var derivativesClient coinbase.Client
+	if cfg.Coinbase.Derivatives.AuthType == "jwt" {
+		// Use JWT authentication
+		client, err := coinbase.NewAdvancedTradeClientJWT(
+			cfg.Coinbase.Derivatives.APIKeyName,
+			cfg.Coinbase.Derivatives.PrivateKeyPEM,
+			cfg.Coinbase.Derivatives.Sandbox,
+		)
+		if err != nil {
+			logger.WithError(err).Fatal("Failed to create JWT derivatives client")
+		}
+		derivativesClient = client
+	} else {
+		// Use legacy authentication
+		derivativesClient = coinbase.NewAdvancedTradeClient(
+			cfg.Coinbase.Derivatives.APIKey,
+			cfg.Coinbase.Derivatives.APISecret,
+			cfg.Coinbase.Derivatives.Passphrase,
+			cfg.Coinbase.Derivatives.Sandbox,
+		)
+	}
 	
 	// Create basis trader
 	basisTrader := trader.NewBasisTrader(spotClient, derivativesClient, logger)

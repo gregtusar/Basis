@@ -62,15 +62,20 @@ func (g *GCPSecretManager) Close() error {
 }
 
 type SecretNames struct {
-	// Spot trading secrets
+	// Spot trading secrets (Prime API - legacy auth)
 	SpotAPIKey       string
 	SpotAPISecret    string
 	SpotPassphrase   string
 	
-	// Derivatives trading secrets
+	// Derivatives trading secrets (Advanced Trade API)
+	// Legacy auth (deprecated)
 	DerivativesAPIKey       string
 	DerivativesAPISecret    string
 	DerivativesPassphrase   string
+	
+	// JWT auth (new method)
+	DerivativesAPIKeyName   string
+	DerivativesPrivateKey   string
 }
 
 func DefaultSecretNames() SecretNames {
@@ -81,5 +86,7 @@ func DefaultSecretNames() SecretNames {
 		DerivativesAPIKey:       "coinbase-derivatives-api-key",
 		DerivativesAPISecret:    "coinbase-derivatives-api-secret",
 		DerivativesPassphrase:   "coinbase-derivatives-passphrase",
+		DerivativesAPIKeyName:   "coinbase-derivatives-jwt-key-name",
+		DerivativesPrivateKey:   "coinbase-derivatives-private-key",
 	}
 }

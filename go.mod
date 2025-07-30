@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	cloud.google.com/go/secretmanager v1.11.4
+	github.com/golang-jwt/jwt/v5 v5.2.0
 	github.com/gorilla/websocket v1.5.1
 	github.com/joho/godotenv v1.5.1
 	github.com/sirupsen/logrus v1.9.3

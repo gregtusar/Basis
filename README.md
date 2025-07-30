@@ -33,8 +33,10 @@ A sophisticated cryptocurrency basis trading system that executes arbitrage stra
 - Go 1.21 or higher
 - Python 3.8+ (for Streamlit dashboard)
 - Coinbase API credentials:
-  - Prime API credentials (for spot trading)
-  - Advanced Trade API credentials (for derivatives)
+  - Prime API: API Key, Secret, and Passphrase (for spot trading)
+  - Advanced Trade API: Either Legacy or JWT credentials (for derivatives)
+    - Legacy: API Key, Secret, and Passphrase (deprecated)
+    - JWT: API Key Name and EC Private Key (recommended)
 - (Optional) Google Cloud Project with Secret Manager enabled
 
 ## Quick Start
@@ -63,10 +65,8 @@ A sophisticated cryptocurrency basis trading system that executes arbitrage stra
    # Set up GCP authentication
    gcloud auth application-default login
    
-   # Create secrets in GCP
-   echo -n "your-api-key" | gcloud secrets create coinbase-spot-api-key --data-file=-
-   echo -n "your-api-secret" | gcloud secrets create coinbase-spot-api-secret --data-file=-
-   # ... repeat for all secrets
+   # Run the setup script which handles all secret types
+   ./scripts/setup-gcp-secrets.sh
    
    # Configure the application to use GCP
    export GCP_PROJECT_ID="your-project-id"
@@ -100,9 +100,29 @@ The application supports two methods for managing API credentials:
 1. **Environment Variables** (default): Store credentials in `.env` file or system environment
 2. **GCP Secret Manager**: Store credentials securely in Google Cloud
 
+### Authentication Methods
+
+#### Coinbase Prime (Spot Trading)
+- Uses traditional API Key/Secret/Passphrase authentication
+- No changes from standard Coinbase API authentication
+
+#### Advanced Trade API (Derivatives/Futures)
+Supports two authentication methods:
+
+1. **Legacy Authentication** (default for backward compatibility)
+   - Uses API Key, Secret, and Passphrase
+   - Same as Prime API authentication
+   - Deprecated by Coinbase but still functional
+
+2. **JWT Authentication** (recommended for new integrations)
+   - Uses API Key Name (format: `organizations/{org_id}/apiKeys/{key_id}`)
+   - Uses EC Private Key in PEM format
+   - More secure and future-proof
+   - Set `auth_type: "jwt"` in config to enable
+
 To use GCP Secret Manager:
 1. Enable the Secret Manager API in your GCP project
-2. Create secrets with the appropriate names (see `config.yaml`)
+2. Run `./scripts/setup-gcp-secrets.sh` to create all required secrets
 3. Set `gcp.use_secrets: true` in config or `GCP_USE_SECRETS=true` in environment
 4. Ensure the application has appropriate GCP credentials (via service account or ADC)
 

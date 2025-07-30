@@ -9,9 +9,20 @@ coinbase:
     passphrase: ""
     sandbox: true
   derivatives:
+    # Authentication type: "legacy" or "jwt"
+    auth_type: "legacy"
+    
+    # Legacy authentication (deprecated but still supported)
     api_key: ""
     api_secret: ""
     passphrase: ""
+    
+    # JWT authentication (new method - use this for new integrations)
+    # API Key Name format: organizations/{org_id}/apiKeys/{key_id}
+    api_key_name: ""
+    # Private Key in PEM format (can be multiline with | in YAML)
+    private_key_pem: ""
+    
     sandbox: true
   websocket:
     url: wss://ws-feed.exchange.coinbase.com
@@ -47,3 +58,5 @@ gcp:
     derivatives_api_key: "coinbase-derivatives-api-key"
     derivatives_api_secret: "coinbase-derivatives-api-secret"
     derivatives_passphrase: "coinbase-derivatives-passphrase"
+    derivatives_api_key_name: "coinbase-derivatives-jwt-key-name"
+    derivatives_private_key: "coinbase-derivatives-private-key"
