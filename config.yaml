@@ -1,0 +1,49 @@
+server:
+  port: 8080
+  streamlit_api_url: http://localhost:8501
+
+coinbase:
+  spot:
+    api_key: ""
+    api_secret: ""
+    passphrase: ""
+    sandbox: true
+  derivatives:
+    api_key: ""
+    api_secret: ""
+    passphrase: ""
+    sandbox: true
+  websocket:
+    url: wss://ws-feed.exchange.coinbase.com
+    reconnect_delay: 5
+    max_reconnects: 10
+
+trading:
+  default_min_trade_size: 0.01
+  default_max_position: 1.0
+  default_target_basis: 5.0
+  rebalance_threshold: 0.1
+  max_slippage: 0.01
+  order_timeout: 60
+
+database:
+  path: ./data/basis_trader.db
+
+logging:
+  level: info
+  format: json
+  file: ""
+
+gcp:
+  # Set to true to use GCP Secret Manager for API credentials
+  use_secrets: false
+  # Your GCP project ID
+  project_id: ""
+  # Secret names in GCP Secret Manager (defaults shown)
+  secret_names:
+    spot_api_key: "coinbase-spot-api-key"
+    spot_api_secret: "coinbase-spot-api-secret"
+    spot_passphrase: "coinbase-spot-passphrase"
+    derivatives_api_key: "coinbase-derivatives-api-key"
+    derivatives_api_secret: "coinbase-derivatives-api-secret"
+    derivatives_passphrase: "coinbase-derivatives-passphrase"
